@@ -11,7 +11,7 @@ from modules.SaveOutputs import save_reconstructions, save_samples
 
 def train(epochs: int = 10, dataset_dir: str = "./data/raw", out_dir: str = "./outputs/",
           checkpoint_dir = "./experiments/checkpoints", batch_size: int = 128,
-          latent_dim: int = 20, hidden_dim: int = 20, lr: float = 1e-3,
+          latent_dim: int = 20, hidden_dim: int = 400, lr: float = 1e-3,
           beta: float = 1.0) -> None:
     torch.manual_seed(0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -75,7 +75,7 @@ def train(epochs: int = 10, dataset_dir: str = "./data/raw", out_dir: str = "./o
         print(
             f"  [val] total: {test_total / n_test:.4f} | recon: {test_recon / n_test:.4f} | kld: {test_kld / n_test:.4f}"
         )
-        save_checkpoint(model, optimizer, epoch, checkpoint_dir)
+    save_checkpoint(model, optimizer, epoch, checkpoint_dir)
 
     # Save samples from prior
     save_samples(model, out_dir, device, n=64)

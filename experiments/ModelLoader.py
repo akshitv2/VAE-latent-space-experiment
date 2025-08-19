@@ -4,6 +4,7 @@ from models.Decoder import Decoder
 from models.Encoder import Encoder
 from models.VAE import VAE
 
+
 def load_vae_model(checkpoint_path: str, device: torch.device = None) -> VAE:
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -15,6 +16,7 @@ def load_vae_model(checkpoint_path: str, device: torch.device = None) -> VAE:
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
     return model
+
 
 def load_encoder_decoder(checkpoint_path: str, device: torch.device = None):
     if device is None:
