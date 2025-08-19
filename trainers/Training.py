@@ -1,16 +1,16 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from torchvision import datasets, transforms, utils as vutils
+from torchvision import datasets, transforms
 import os
 
+from experiments.Checkpointing import save_checkpoint
 from models.VAE import VAE
 from modules.Losses import vae_loss
 from modules.SaveOutputs import save_reconstructions, save_samples
 
 
-def train(epochs: int = 10, dataset_dir: str = "./data/raw", out_dir: str = "./outputs/", batch_size: int = 128,
+def train(epochs: int = 10, dataset_dir: str = "./data/raw", out_dir: str = "./outputs/",
+          checkpoint_dir = "./experiments/checkpoints", batch_size: int = 128,
           latent_dim: int = 20, hidden_dim: int = 20, lr: float = 1e-3,
           beta: float = 1.0) -> None:
     torch.manual_seed(0)
@@ -75,6 +75,7 @@ def train(epochs: int = 10, dataset_dir: str = "./data/raw", out_dir: str = "./o
         print(
             f"  [val] total: {test_total / n_test:.4f} | recon: {test_recon / n_test:.4f} | kld: {test_kld / n_test:.4f}"
         )
+        save_checkpoint(model, optimizer, epoch, checkpoint_dir)
 
     # Save samples from prior
     save_samples(model, out_dir, device, n=64)
