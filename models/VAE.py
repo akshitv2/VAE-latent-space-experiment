@@ -1,15 +1,16 @@
-from torch import nn
 import torch
-from models.Encoder import Encoder
+from torch import nn
+
 from models.Decoder import Decoder
+from models.Encoder import Encoder
+
 
 class VAE(nn.Module):
-    def __init__(self, latent_dim: int = 20, hidden_dim: int = 400):
+    def __init__(self, latent_dim: int = 128):
         super().__init__()
-        self.encoder = Encoder(latent_dim=latent_dim, hidden_dim=hidden_dim)
-        self.decoder = Decoder(latent_dim=latent_dim, hidden_dim=hidden_dim)
+        self.encoder = Encoder(latent_dim=latent_dim)  # conv encoder
+        self.decoder = Decoder(latent_dim=latent_dim)  # conv decoder
         self.latent_dim = latent_dim
-
 
     @staticmethod
     def reparameterize(mu, logvar):
@@ -17,9 +18,8 @@ class VAE(nn.Module):
         eps = torch.randn_like(std)
         return mu + eps * std
 
-
     def forward(self, x):
-        mu, logvar = self.encoder(x)
-        z = self.reparameterize(mu, logvar)
-        logits = self.decoder(z)
-        return logits, mu, logvar
+        mu, logvar = self.encoder(x)          # Encode image
+        z = self.reparameterize(mu, logvar)   # Sample latent
+        x_recon = self.decoder(z)             # Decode back
+        return x_recon, mu, logvar

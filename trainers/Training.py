@@ -10,29 +10,33 @@ from modules.SaveOutputs import save_reconstructions, save_samples
 
 
 def train(epochs: int = 10, dataset_dir: str = "./data/raw", out_dir: str = "./outputs/",
-          checkpoint_dir = "./experiments/checkpoints", batch_size: int = 128,
-          latent_dim: int = 20, hidden_dim: int = 400, lr: float = 1e-3,
+          checkpoint_dir="./experiments/checkpoints", batch_size: int = 128,
+          latent_dim: int = 128, lr: float = 1e-3,
           beta: float = 1.0) -> None:
     torch.manual_seed(0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    transform = transforms.Compose([transforms.ToTensor()
-                                    # , transforms.Normalize((0.5,), (0.5,))
-                                    ])
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),  # resize to 224x224
+        transforms.ToTensor()  # convert to tensor & scale to [0,1]
+    ])
 
-    train_ds = datasets.MNIST(root=dataset_dir, train=True, download=True, transform=transform)
-    test_ds = datasets.MNIST(root=dataset_dir, train=False, download=True, transform=transform)
+    train_ds = datasets.OxfordIIITPet(root=dataset_dir, split="trainval", download=True, transform=transform)
+    test_ds = datasets.OxfordIIITPet(root=dataset_dir, split="test", download=True, transform=transform)
 
     train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=True)
+    # Print
+    print("Loaded datasets, number of samples: ", len(train_ds))
 
     # Model & Optimizer
-    model = VAE(latent_dim=latent_dim, hidden_dim=hidden_dim).to(device)
+    model = VAE(latent_dim=latent_dim).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     global_step = 0
     os.makedirs(out_dir, exist_ok=True)
 
+    print("Training...")
     for epoch in range(1, epochs + 1):
         model.train()
         running_total = 0.0
@@ -51,10 +55,10 @@ def train(epochs: int = 10, dataset_dir: str = "./data/raw", out_dir: str = "./o
             running_recon += loss.recon.item()
             running_kld += loss.kld.item()
 
-            if global_step % 500 == 0:
-                save_reconstructions(model, (x.cpu(), None), out_dir, global_step, device)
-            global_step += 1
+            # if global_step % 500 == 0:
 
+            # global_step += 1
+        save_reconstructions(model, (x.cpu(), None), out_dir, epoch, device)
         n_train = len(train_loader.dataset)
         print(
             f"Epoch {epoch:02d} | total: {running_total / n_train:.4f} | "
