@@ -3,9 +3,6 @@ import torch.nn as nn
 import torchvision.models as models
 import torch.nn.functional as F
 
-# -------------------------------
-# Perceptual loss using VGG16
-# -------------------------------
 class VGGPerceptualLoss(nn.Module):
     def __init__(self, layer_ids=[3, 8, 15], device='cuda'):
         super().__init__()
@@ -31,16 +28,19 @@ class VGGPerceptualLoss(nn.Module):
 # VAE Loss combining L1 + Perceptual + KL
 # -------------------------------
 class VAEVggLoss(nn.Module):
-    def __init__(self, recon_weight=1.0, perc_weight=0.1, kl_weight=0.01):
+    def __init__(self, recon_weight=10.0, perc_weight=0.001, kl_weight=1.0):
         super().__init__()
         self.recon_weight = recon_weight
         self.perc_weight = perc_weight
         self.kl_weight = kl_weight
         self.perc_loss = VGGPerceptualLoss()
 
-    def forward(self, x_recon, x, mu, logvar):
+    def forward(self, x_recon, x, mu, logvar, func = "l1"):
         # L1 reconstruction loss
-        recon_loss = F.l1_loss(x_recon, x)
+        if func == "l1":
+            recon_loss = F.l1_loss(x_recon, x)
+        elif func == "mse":
+            recon_loss = F.mse_loss(x_recon, x)
 
         # Perceptual loss
         perc_loss = self.perc_loss(x_recon, x)
@@ -49,7 +49,7 @@ class VAEVggLoss(nn.Module):
         kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
         kl_loss = kl_loss / x.size(0)  # normalize by batch size
 
-        total_loss = self.recon_weight * recon_loss*2 + \
+        total_loss = self.recon_weight * recon_loss + \
                      self.perc_weight * perc_loss + \
                      self.kl_weight * kl_loss
-        return total_loss, recon_loss, perc_loss, kl_loss
+        return total_loss, self.recon_weight *recon_loss, self.perc_weight *perc_loss, self.kl_weight *kl_loss
