@@ -1,26 +1,55 @@
 import torch
+import torch.nn as nn
+import torchvision.models as models
 import torch.nn.functional as F
-from dataclasses import dataclass
 
-@dataclass
-class LossOut:
-    total: torch.Tensor
-    recon: torch.Tensor
-    kld: torch.Tensor
+# -------------------------------
+# Perceptual loss using VGG16
+# -------------------------------
+class VGGPerceptualLoss(nn.Module):
+    def __init__(self, layer_ids=[3, 8, 15], device='cuda'):
+        super().__init__()
+        self.device = device
+        vgg = models.vgg16(pretrained=True).features.to(device)  # <-- move to device
+        self.layers = nn.ModuleList([vgg[:i+1] for i in layer_ids])
+        for param in vgg.parameters():
+            param.requires_grad = False
 
+    def forward(self, x, y):
+        # normalize to ImageNet stats
+        mean = torch.tensor([0.485, 0.456, 0.406], device=self.device).view(1,3,1,1)
+        std  = torch.tensor([0.229, 0.224, 0.225], device=self.device).view(1,3,1,1)
+        x_norm = (x - mean) / std
+        y_norm = (y - mean) / std
 
-def vae_loss(x_recon, x, mu, logvar, beta: float = 1.0) -> LossOut:
-    # Reconstruction loss
-    # BCE can sometimes lead to vanishing gradients for pixel values near 0 or 1.
-    # MSE (L2) is often smoother for VAEs on images.
-    recon = F.mse_loss(x_recon, x, reduction="sum")
+        loss = 0
+        for layer in self.layers:
+            loss += F.mse_loss(layer(x_norm), layer(y_norm))
+        return loss
 
-    # KL Divergence term
-    # Summed over all pixels in latent map
-    kld = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+# -------------------------------
+# VAE Loss combining L1 + Perceptual + KL
+# -------------------------------
+class VAEVggLoss(nn.Module):
+    def __init__(self, recon_weight=1.0, perc_weight=0.1, kl_weight=0.01):
+        super().__init__()
+        self.recon_weight = recon_weight
+        self.perc_weight = perc_weight
+        self.kl_weight = kl_weight
+        self.perc_loss = VGGPerceptualLoss()
 
-    # Beta-VAE objective
-    total = recon + beta * kld
+    def forward(self, x_recon, x, mu, logvar):
+        # L1 reconstruction loss
+        recon_loss = F.l1_loss(x_recon, x)
 
-    return LossOut(total, recon, kld)
+        # Perceptual loss
+        perc_loss = self.perc_loss(x_recon, x)
 
+        # KL divergence
+        kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+        kl_loss = kl_loss / x.size(0)  # normalize by batch size
+
+        total_loss = self.recon_weight * recon_loss*2 + \
+                     self.perc_weight * perc_loss + \
+                     self.kl_weight * kl_loss
+        return total_loss, recon_loss, perc_loss, kl_loss
