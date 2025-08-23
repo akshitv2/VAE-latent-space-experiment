@@ -5,7 +5,7 @@ from torchvision import utils as vutils
 from models.VAE import VAE
 
 @torch.no_grad()
-def save_reconstructions(model: VAE, x, out_dir: str, step: int, device: torch.device):
+def save_reconstructions(model: VAE, x, out_dir: str,variant:str, step: int, device: torch.device):
     model.eval()
     # x, _ = batch
     # x = x.to(device)
@@ -22,7 +22,7 @@ def save_reconstructions(model: VAE, x, out_dir: str, step: int, device: torch.d
     )
 
     os.makedirs(out_dir, exist_ok=True)
-    vutils.save_image(grid, os.path.join(out_dir, f"recon_step_{step:06d}.png"))
+    vutils.save_image(grid, os.path.join(out_dir, f"recon_{variant}_step_{step:06d}.png"))
 
 
 @torch.no_grad()

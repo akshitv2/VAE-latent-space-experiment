@@ -28,18 +28,19 @@ class VGGPerceptualLoss(nn.Module):
 # VAE Loss combining L1 + Perceptual + KL
 # -------------------------------
 class VAEVggLoss(nn.Module):
-    def __init__(self, recon_weight=10.0, perc_weight=0.001, kl_weight=1.0):
+    def __init__(self, recon_weight=10.0, perc_weight=0.001, kl_weight=1.0, recon_loss_function = "mse"):
         super().__init__()
         self.recon_weight = recon_weight
         self.perc_weight = perc_weight
         self.kl_weight = kl_weight
         self.perc_loss = VGGPerceptualLoss()
+        self.recon_loss_function = recon_loss_function
 
-    def forward(self, x_recon, x, mu, logvar, func = "l1"):
+    def forward(self, x_recon, x, mu, logvar):
         # L1 reconstruction loss
-        if func == "l1":
+        if self.recon_loss_function == "l1":
             recon_loss = F.l1_loss(x_recon, x)
-        elif func == "mse":
+        elif self.recon_loss_function == "mse":
             recon_loss = F.mse_loss(x_recon, x)
 
         # Perceptual loss
