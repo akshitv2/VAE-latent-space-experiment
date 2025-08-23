@@ -28,7 +28,7 @@ class VGGPerceptualLoss(nn.Module):
 # VAE Loss combining L1 + Perceptual + KL
 # -------------------------------
 class VAEVggLoss(nn.Module):
-    def __init__(self, recon_weight=10.0, perc_weight=0.001, kl_weight=1.0, recon_loss_function = "mse"):
+    def __init__(self, recon_weight=0.01, perc_weight=0.1, kl_weight=1, recon_loss_function = "mse"):
         super().__init__()
         self.recon_weight = recon_weight
         self.perc_weight = perc_weight
@@ -39,16 +39,16 @@ class VAEVggLoss(nn.Module):
     def forward(self, x_recon, x, mu, logvar):
         # L1 reconstruction loss
         if self.recon_loss_function == "l1":
-            recon_loss = F.l1_loss(x_recon, x)
+            recon_loss = F.l1_loss(x_recon, x, reduction="sum")
         elif self.recon_loss_function == "mse":
-            recon_loss = F.mse_loss(x_recon, x)
+            recon_loss = F.mse_loss(x_recon, x, reduction="sum")
 
         # Perceptual loss
         perc_loss = self.perc_loss(x_recon, x)
 
         # KL divergence
         kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-        kl_loss = kl_loss / x.size(0)  # normalize by batch size
+        kl_loss = kl_loss
 
         total_loss = self.recon_weight * recon_loss + \
                      self.perc_weight * perc_loss + \

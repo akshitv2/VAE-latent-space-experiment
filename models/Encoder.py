@@ -12,11 +12,11 @@ class Encoder(nn.Module):
             nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1),  # [B, 64, 16, 16]
             nn.ReLU(),
             nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1), # [B, 128, 8, 8]
-            nn.ReLU(),
+            nn.ELU(),
             nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1),# [B, 256, 4, 4]
-            nn.ReLU(),
+            nn.ELU(),
             nn.Conv2d(256, 512, kernel_size=4, stride=2, padding=1),# [B, 512, 2, 2]
-            nn.ReLU()
+            nn.ELU()
         )
 
         # Use 1x1 convolutions to map into latent channels

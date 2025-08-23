@@ -12,11 +12,11 @@ class Decoder(nn.Module):
             nn.ConvTranspose2d(512, 256, kernel_size=4, stride=2, padding=1),         # [B, 256, 8, 8]
             nn.ReLU(),
             nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),         # [B, 128, 16, 16]
-            nn.ReLU(),
+            nn.ELU(),
             nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),          # [B, 64, 32, 32]
-            nn.ReLU(),
+            nn.ELU(),
             nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),           # [B, 32, 64, 64]
-            nn.ReLU(),
+            nn.ELU(),
             nn.Conv2d(32, 3, kernel_size=3, stride=1, padding=1),                     # [B, 3, 64, 64]
             nn.Sigmoid()  # Output in [0,1] for images
         )
