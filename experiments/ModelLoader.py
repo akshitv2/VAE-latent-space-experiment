@@ -5,14 +5,11 @@ from models.Encoder import Encoder
 from models.VAE import VAE
 
 
-def load_vae_model(checkpoint_path: str, device: torch.device = None) -> VAE:
+def load_vae_model(checkpoint_path: str, latent_dim = 128, device: torch.device = None) -> VAE:
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     checkpoint = torch.load(checkpoint_path, map_location=device)
-    args = checkpoint.get('args', {})
-    latent_dim = args.get('latent_dim', 20)
-    hidden_dim = args.get('hidden_dim', 400)
-    model = VAE(latent_dim=latent_dim, hidden_dim=hidden_dim).to(device)
+    model = VAE(latent_dim=latent_dim).to(device)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
     return model

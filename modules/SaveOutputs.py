@@ -7,10 +7,7 @@ from models.VAE import VAE
 @torch.no_grad()
 def save_reconstructions(model: VAE, x, out_dir: str,variant:str, step: int, device: torch.device):
     model.eval()
-    # x, _ = batch
-    # x = x.to(device)
 
-    # Forward pass (x_recon already in [0,1], shape [B, 3, 224, 224])
     x_recon, _, _ = model(x)
 
     # Show originals (top row) + reconstructions (bottom row)
