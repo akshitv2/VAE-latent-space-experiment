@@ -13,13 +13,13 @@ class VAE(nn.Module):
 
     @staticmethod
     def reparameterize(mu, logvar):
-        """Reparameterization trick: z = mu + eps * sigma"""
+        """Reparameterization trick applied element-wise on feature maps"""
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         return mu + eps * std
 
     def forward(self, x):
-        mu, logvar = self.encoder(x)            # [B, latent_dim, 2, 2]
-        z = self.reparameterize(mu, logvar)     # [B, latent_dim, 2, 2]
-        recon = self.decoder(z)                 # [B, 3, 64, 64]
+        mu, logvar = self.encoder(x)  # [B, C, 4, 4]
+        z = self.reparameterize(mu, logvar)  # same shape
+        recon = self.decoder(z)  # [B, 3, 64, 64]
         return recon, mu, logvar
