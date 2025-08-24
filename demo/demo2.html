@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Hover Grid Gallery with Blanks</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(10, 100px);
+            grid-gap: 10px;
+            padding: 20px;
+        }
+        .thumbnail {
+            width: 100px;
+            height: 100px;
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .thumbnail:hover {
+            transform: scale(2);
+            z-index: 10;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .blank {
+            width: 100px;
+            height: 100px;
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+<div class="gallery">
+    <div class="thumbnail"><img src="outputs\6-13\image0001.png" ></div>
+    <div class="thumbnail"><img src="outputs\6-13\image0002.png" ></div>
+    <div class="thumbnail"><img src="outputs\6-13\image0003.png" ></div>
+    <div class="thumbnail"><img src="outputs\6-13\image0004.png" ></div>
+    <div class="thumbnail"><img src="outputs\6-13\image0005.png" ></div>
+    <div class="thumbnail"><img src="outputs\6-13\image0006.png" ></div>
+    <div class="thumbnail"><img src="outputs\6-13\image0007.png" ></div>
+    <div class="thumbnail"><img src="outputs\6-13\image0008.png" ></div>
+    <div class="thumbnail"><img src="outputs\6-13\image0009.png" ></div>
+    <div class="thumbnail"><img src="outputs\6-13\image0010.png" ></div>
+
+    <div class="thumbnail"><img src="outputs\6-9\image0002.png" ></div>
+    <div class="thumbnail"><img src="outputs\6-C\image0002.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\13-C\image0002.png" ></div>
+    <div class="thumbnail"><img src="outputs\13-12\image0002.png" ></div>
+
+    <div class="thumbnail"><img src="outputs\6-9\image0003.png" ></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\6-C\image0003.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\13-C\image0003.png" ></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\13-12\image0003.png" ></div>
+
+    <div class="thumbnail"><img src="outputs\6-9\image0004.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\6-C\image0004.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\13-C\image0004.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\13-12\image0004.png" ></div>
+
+    <div class="thumbnail"><img src="outputs\6-9\image0005.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\6-C\image0005.png" ></div>
+    <div class="thumbnail"><img src="outputs\13-C\image0005.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\13-12\image0005.png" ></div>
+
+    <div class="thumbnail"><img src="outputs\6-9\image0006.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\C-9\image0001.png" ></div>
+    <div class="thumbnail"><img src="outputs\C-12\image0001.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\13-12\image0006.png" ></div>
+
+    <div class="thumbnail"><img src="outputs\6-9\image0007.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\C-9\image0002.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\C-12\image0002.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\13-12\image0007.png" ></div>
+
+    <div class="thumbnail"><img src="outputs\6-9\image0008.png" ></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\C-9\image0003.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\C-12\image0003.png" ></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\13-12\image0008.png" ></div>
+
+    <div class="thumbnail"><img src="outputs\6-9\image0009.png" ></div>
+    <div class="thumbnail"><img src="outputs\C-9\image0004.png" ></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="blank"></div>
+    <div class="thumbnail"><img src="outputs\C-12\image0004.png" ></div>
+    <div class="thumbnail"><img src="outputs\13-12\image0009.png" ></div>
+
+    <div class="thumbnail"><img src="outputs\6-9\image0010.png" ></div>
+    <div class="thumbnail"><img src="outputs\9-12\image0002.png" ></div>
+    <div class="thumbnail"><img src="outputs\9-12\image0003.png" ></div>
+    <div class="thumbnail"><img src="outputs\9-12\image0004.png" ></div>
+    <div class="thumbnail"><img src="outputs\9-12\image0005.png" ></div>
+    <div class="thumbnail"><img src="outputs\9-12\image0006.png" ></div>
+    <div class="thumbnail"><img src="outputs\9-12\image0007.png" ></div>
+    <div class="thumbnail"><img src="outputs\9-12\image0008.png" ></div>
+    <div class="thumbnail"><img src="outputs\9-12\image0009.png" ></div>
+    <div class="thumbnail"><img src="outputs\13-12\image0010.png" ></div>
+
+    <!-- Generating 100 slots for a 10x10 grid with some blank squares -->
+    <script>
+
+
+<!--            for (let i = 1; i <= 100; i++) {-->
+<!--                // Randomly decide if the square should be blank (e.g., 20% chance)-->
+<!--                if (Math.random() < 0.2) {-->
+<!--                    document.write(`-->
+<!--                        <div class="blank"></div>-->
+<!--                    `);-->
+<!--                } else {-->
+<!--                    document.write(`-->
+<!--                        <div class="thumbnail">-->
+<!--                            <img src="https://picsum.photos/200/200?random=${i}" alt="Random Image ${i}">-->
+<!--                        </div>-->
+<!--                    `);-->
+<!--                }-->
+<!--            }-->
+    </script>
+</div>
+</body>
+</html>
