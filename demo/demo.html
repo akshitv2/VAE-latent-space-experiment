@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Hover Grid Gallery</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(10, 100px);
+            grid-gap: 10px;
+            padding: 20px;
+        }
+        .thumbnail {
+            width: 100px;
+            height: 100px;
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .thumbnail:hover {
+            transform: scale(2);
+            z-index: 10;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="gallery">
+        <!-- Generating 100 thumbnails for a 10x10 grid -->
+        <script>
+            for (let i = 1; i <= 100; i++) {
+                document.write(`
+                    <div class="thumbnail">
+                        <img src="https://picsum.photos/200/200?random=${i}" alt="Random Image ${i}">
+                    </div>
+                `);
+            }
+        </script>
+    </div>
+</body>
+</html>

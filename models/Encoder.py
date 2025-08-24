@@ -1,28 +1,30 @@
 import torch
 from torch import nn
 
-from models.ResModels import ResDown
-
-
 class Encoder(nn.Module):
-    def __init__(self, latent_channels=128):
+    def __init__(self, latent_dim: int = 128):
         super().__init__()
-        # Input: 3x64x64
-        self.res1 = ResDown(3, 64)     # 64x64 -> 32x32
-        self.res2 = ResDown(64, 128)   # 32x32 -> 16x16
-        self.res3 = ResDown(128, 256)  # 16x16 -> 8x8
-        self.res4 = ResDown(256, 512)  # 8x8 -> 4x4
 
-        # Use 1x1 conv to produce mu and logvar
-        self.conv_mu = nn.Conv2d(512, latent_channels, kernel_size=1)
-        self.conv_logvar = nn.Conv2d(512, latent_channels, kernel_size=1)
+        # Convolutional feature extractor
+        self.conv_layers = nn.Sequential(
+            nn.Conv2d(3, 32, kernel_size=4, stride=2, padding=1),   # [B, 32, 32, 32]
+            nn.ReLU(),
+            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1),  # [B, 64, 16, 16]
+            nn.ReLU(),
+            nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1), # [B, 128, 8, 8]
+            nn.ELU(),
+            nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1),# [B, 256, 4, 4]
+            nn.ELU(),
+            nn.Conv2d(256, 512, kernel_size=4, stride=2, padding=1),# [B, 512, 2, 2]
+            nn.ELU()
+        )
+
+        # Use 1x1 convolutions to map into latent channels
+        self.conv_mean   = nn.Conv2d(512, latent_dim, kernel_size=1)   # [B, latent_dim, 2, 2]
+        self.conv_logvar = nn.Conv2d(512, latent_dim, kernel_size=1)   # [B, latent_dim, 2, 2]
 
     def forward(self, x):
-        x = self.res1(x)
-        x = self.res2(x)
-        x = self.res3(x)
-        x = self.res4(x)
-
-        mu = self.conv_mu(x)        # shape: [B, latent_channels, 4, 4]
-        logvar = self.conv_logvar(x) # shape: [B, latent_channels, 4, 4]
+        h = self.conv_layers(x)       # [B, 512, 2, 2]
+        mu = self.conv_mean(h)        # [B, latent_dim, 2, 2]
+        logvar = self.conv_logvar(h)  # [B, latent_dim, 2, 2]
         return mu, logvar

@@ -1,78 +1,56 @@
 import torch
-import torch.nn.functional as F
-from dataclasses import dataclass
-
-@dataclass
-class LossOut:
-    total: torch.Tensor
-    recon: torch.Tensor
-    perceptual: torch.Tensor
-    kld: torch.Tensor
-
-import torch
 import torch.nn as nn
 import torchvision.models as models
+import torch.nn.functional as F
 
-# Perceptual VGG loss
-class VGGLoss(nn.Module):
-    def __init__(self, layers=['relu1_2', 'relu2_2'], device='cuda'):
+class VGGPerceptualLoss(nn.Module):
+    def __init__(self, layer_ids=[3, 8, 15], device='cuda'):
         super().__init__()
         self.device = device
-        vgg = models.vgg16(pretrained=True).features.to(device).eval()
-        self.layer_names = layers
-        self.layer_map = {'relu1_2': 3, 'relu2_2': 8, 'relu3_3': 15}
-        self.slices = nn.ModuleList()
-        prev_idx = 0
-        for name in layers:
-            idx = self.layer_map[name]
-            self.slices.append(nn.Sequential(*list(vgg.children())[prev_idx:idx + 1]))
-            prev_idx = idx + 1
-        for param in self.parameters():
+        vgg = models.vgg16(pretrained=True).features.to(device)  # <-- move to device
+        self.layers = nn.ModuleList([vgg[:i+1] for i in layer_ids])
+        for param in vgg.parameters():
             param.requires_grad = False
 
     def forward(self, x, y):
-        # Upsample to 224x224
-        x = F.interpolate(x, size=(224, 224), mode='bilinear', align_corners=False)
-        y = F.interpolate(y, size=(224, 224), mode='bilinear', align_corners=False)
+        # normalize to ImageNet stats
+        mean = torch.tensor([0.485, 0.456, 0.406], device=self.device).view(1,3,1,1)
+        std  = torch.tensor([0.229, 0.224, 0.225], device=self.device).view(1,3,1,1)
+        x_norm = (x - mean) / std
+        y_norm = (y - mean) / std
 
         loss = 0
-        x_feat, y_feat = x, y
-        for slice in self.slices:
-            x_feat = slice(x_feat)
-            y_feat = slice(y_feat)
-            loss += F.mse_loss(x_feat, y_feat)
+        for layer in self.layers:
+            loss += F.mse_loss(layer(x_norm), layer(y_norm))
         return loss
 
+# -------------------------------
+# VAE Loss combining L1 + Perceptual + KL
+# -------------------------------
+class VAEVggLoss(nn.Module):
+    def __init__(self, recon_weight=0.01, perc_weight=0.1, kl_weight=1, recon_loss_function = "mse"):
+        super().__init__()
+        self.recon_weight = recon_weight
+        self.perc_weight = perc_weight
+        self.kl_weight = kl_weight
+        self.perc_loss = VGGPerceptualLoss()
+        self.recon_loss_function = recon_loss_function
 
-# Full VAE loss
-def vae_loss(recon, x, mu, logvar, alpha = 10.0, beta=1.0, gamma=0.001, vgg_loss_fn=None, pixel_loss='mse'):
-    """
-    recon: reconstructed images [B,3,H,W]
-    x: original images [B,3,H,W]
-    mu, logvar: latent maps [B,C,H',W']
-    beta: KL weight
-    gamma: VGG weight
-    vgg_loss_fn: instance of VGGLoss
-    pixel_loss: 'mse' or 'bce'
-    """
-    # Reconstruction loss
-    if pixel_loss == 'mse':
-        recon_loss = nn.functional.mse_loss(recon, x)
-    elif pixel_loss == 'bce':
-        recon_loss = nn.functional.binary_cross_entropy(recon, x)
-    else:
-        raise ValueError("pixel_loss must be 'mse' or 'bce'")
+    def forward(self, x_recon, x, mu, logvar):
+        # L1 reconstruction loss
+        if self.recon_loss_function == "l1":
+            recon_loss = F.l1_loss(x_recon, x, reduction="sum")
+        elif self.recon_loss_function == "mse":
+            recon_loss = F.mse_loss(x_recon, x, reduction="sum")
 
-    # VGG perceptual loss
-    if vgg_loss_fn is not None:
-        perceptual_loss = vgg_loss_fn(recon, x)
-    else:
-        perceptual_loss = 0.0
+        # Perceptual loss
+        perc_loss = self.perc_loss(x_recon, x)
 
-    # KL divergence (sum over latent channels & spatial dims, mean over batch)
-    kl = -0.5 * torch.mean(torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=[1,2,3]))
+        # KL divergence
+        kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+        kl_loss = kl_loss
 
-    # Total loss
-    loss = recon_loss * alpha + gamma * perceptual_loss + beta * kl
-    return LossOut(loss, recon_loss, perceptual_loss, kl)
-
+        total_loss = self.recon_weight * recon_loss + \
+                     self.perc_weight * perc_loss + \
+                     self.kl_weight * kl_loss
+        return total_loss, self.recon_weight *recon_loss, self.perc_weight *perc_loss, self.kl_weight *kl_loss
