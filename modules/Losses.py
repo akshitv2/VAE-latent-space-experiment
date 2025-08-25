@@ -54,3 +54,25 @@ class VAEVggLoss(nn.Module):
                      self.perc_weight * perc_loss + \
                      self.kl_weight * kl_loss
         return total_loss, self.recon_weight *recon_loss, self.perc_weight *perc_loss, self.kl_weight *kl_loss
+
+def kl_divergence(mu, logvar, reduction='mean'):
+    # KL per element: -0.5 * (1 + logvar - mu^2 - exp(logvar))
+    kl = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
+    # sum over latent dims (C,H,W)
+    kl = kl.sum(dim=(1, 2, 3))
+    if reduction == 'mean':
+        return kl.mean()
+    elif reduction == 'sum':
+        return kl.sum()
+    else:
+        return kl  # no reduction
+
+def vae_loss(x, x_recon, mu, logvar, beta=1.0, recon_loss='l2'):
+    if recon_loss == 'bce':
+        rec = F.binary_cross_entropy(x_recon, x, reduction='none').sum(dim=(1,2,3)).mean()
+    elif recon_loss == 'l2':
+        rec = F.mse_loss(x_recon, x, reduction='none').sum(dim=(1,2,3)).mean()
+    else:
+        raise ValueError("recon_loss must be 'bce' or 'l2'")
+    kl = kl_divergence(mu, logvar, reduction='mean')
+    return rec + beta * kl, rec, kl

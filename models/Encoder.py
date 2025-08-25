@@ -1,30 +1,40 @@
 import torch
 from torch import nn
 
-class Encoder(nn.Module):
-    def __init__(self, latent_dim: int = 128):
-        super().__init__()
+from models.ResBlocks import ResidualBlock
 
-        # Convolutional feature extractor
-        self.conv_layers = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=4, stride=2, padding=1),   # [B, 32, 32, 32]
-            nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1),  # [B, 64, 16, 16]
-            nn.ReLU(),
-            nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1), # [B, 128, 8, 8]
-            nn.ELU(),
-            nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1),# [B, 256, 4, 4]
-            nn.ELU(),
-            nn.Conv2d(256, 512, kernel_size=4, stride=2, padding=1),# [B, 512, 2, 2]
-            nn.ELU()
+
+class Encoder(nn.Module):
+    """
+    64x64 -> ... -> 4x4 spatial feature map.
+    Produces mu and logvar tensors of shape (B, latent_ch, 4, 4).
+    """
+    def __init__(self, in_ch=3, base_ch=64, latent_ch=128):
+        super().__init__()
+        C = base_ch
+
+        self.stem = nn.Conv2d(in_ch, C, kernel_size=3, stride=1, padding=1)
+
+        # Sequence of residual downs: 64->32->16->8->4
+        self.enc = nn.Sequential(
+            ResidualBlock(C,     C,     downsample=False),
+            ResidualBlock(C,     C,     downsample=True),   # 64 -> 32
+            ResidualBlock(C,     2*C,   downsample=False),
+            ResidualBlock(2*C,   2*C,   downsample=True),   # 32 -> 16
+            ResidualBlock(2*C,   4*C,   downsample=False),
+            ResidualBlock(4*C,   4*C,   downsample=True),   # 16 -> 8
+            ResidualBlock(4*C,   8*C,   downsample=False),
+            ResidualBlock(8*C,   8*C,   downsample=True),   # 8  -> 4
+            ResidualBlock(8*C,   8*C,   downsample=False),
         )
 
-        # Use 1x1 convolutions to map into latent channels
-        self.conv_mean   = nn.Conv2d(512, latent_dim, kernel_size=1)   # [B, latent_dim, 2, 2]
-        self.conv_logvar = nn.Conv2d(512, latent_dim, kernel_size=1)   # [B, latent_dim, 2, 2]
+        # Heads for mean and log-variance; both output (B, latent_ch, 4, 4)
+        self.mu_head     = nn.Conv2d(8*C, latent_ch, kernel_size=1)
+        self.logvar_head = nn.Conv2d(8*C, latent_ch, kernel_size=1)
 
     def forward(self, x):
-        h = self.conv_layers(x)       # [B, 512, 2, 2]
-        mu = self.conv_mean(h)        # [B, latent_dim, 2, 2]
-        logvar = self.conv_logvar(h)  # [B, latent_dim, 2, 2]
+        h = self.stem(x)
+        h = self.enc(h)              # (B, 8*C, 4, 4)
+        mu = self.mu_head(h)         # (B, latent_ch, 4, 4)
+        logvar = self.logvar_head(h) # (B, latent_ch, 4, 4)
         return mu, logvar

@@ -29,15 +29,14 @@ def load_data(dataset_dir: str = "./data/raw", batch_size: int = 64, num_workers
 
 
 def vae_train(model: torch.nn.Module, train_loader, test_loader, loss_function, epochs: int = 10,
-              dataset_dir: str = "./data/raw", out_dir: str = "./outputs/",
-              checkpoint_dir="./experiments/checkpoints", batch_size: int = 128,
-              latent_dim: int = 128, lr: float = 1e-3,
+              out_dir: str = "./outputs/",
+              checkpoint_dir="./experiments/checkpoints",
+              lr: float = 1e-3,
               beta: float = 1.0, variant: str = ""):
     os.makedirs(out_dir, exist_ok=True)
     os.makedirs(checkpoint_dir, exist_ok=True)
     scaler = GradScaler()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # model = VAE(latent_dim=latent_dim).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     print("Training...")
@@ -51,7 +50,7 @@ def vae_train(model: torch.nn.Module, train_loader, test_loader, loss_function, 
             x = x.to(device)
             optimizer.zero_grad(set_to_none=True)
             logits, mean, logvar = model(x)
-            loss, recon_loss, perc_loss, kl_loss = loss_function(logits, x, mean, logvar)
+            loss, recon_loss, kl_loss = loss_function(logits, x, mean, logvar)
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
@@ -59,9 +58,7 @@ def vae_train(model: torch.nn.Module, train_loader, test_loader, loss_function, 
             progress_bar.set_postfix(
                 loss=f"{loss.item():.3f}",
                 l1=f"{recon_loss.item():.3f}",
-                kld=f"{kl_loss.item():.3f}",
-                percep=f"{perc_loss.item():.3f}",
-
+                kld=f"{kl_loss.item():.3f}"
             )
             running_total += loss.item()
             running_recon += loss.item()
@@ -80,7 +77,7 @@ def vae_train(model: torch.nn.Module, train_loader, test_loader, loss_function, 
                 for x, _ in test_loader:
                     x = x.to(device)
                     logits, mean, logvar = model(x)
-                    loss, recon_loss, perc_loss, kl_loss = loss_function(logits, x, mean, logvar, beta=beta)
+                    loss, recon_loss, kl_loss = loss_function(logits, x, mean, logvar, beta=beta)
                     test_total += loss.item()
                     test_recon += recon_loss.item()
                     test_kld += kl_loss.item()
