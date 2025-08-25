@@ -16,7 +16,7 @@ def load_data(dataset_dir:str = "./data/raw", batch_size:int=64, num_workers:int
         transforms.Resize((64, 64)),  # resize to 224x224
         transforms.ToTensor()  # convert to tensor & scale to [0,1]
     ])
-    dataset = datasets.ImageFolder(root="dataset_dir", transform=transform)
+    dataset = datasets.ImageFolder(root=dataset_dir, transform=transform)
     train_test_split_var = 0.99
     train_dataset, val_dataset = torch.utils.data.random_split(dataset, [int(train_test_split_var * len(dataset)),
                                                                          len(dataset) - int(
