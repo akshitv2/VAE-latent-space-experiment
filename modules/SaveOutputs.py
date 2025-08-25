@@ -5,7 +5,7 @@ from torchvision import utils as vutils
 from models.VAE import VAE
 
 @torch.no_grad()
-def save_reconstructions(model: VAE, x, out_dir: str,variant:str, step: int, device: torch.device):
+def save_reconstructions(model: torch.nn.Module, x, out_dir: str,variant:str, step: int, device: torch.device):
     model.eval()
 
     x_recon, _, _ = model(x)
